@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # AWS-Sim: Serverless Web Application Console
 
 A professional-grade Serverless Web Application project built with Python Flask. This project simulates a real-world AWS architecture locally, designed for Cloud/DevOps engineers to showcase their understanding of serverless concepts.
@@ -77,3 +78,6 @@ This project demonstrates proficiency in:
 
 ---
 *Created for Cloud & DevOps Portfolio Excellence.*
+=======
+# aws-serverless-simulator
+>>>>>>> 70d71aaad66a9a0be8ea737e2c0b34439735ea4d
