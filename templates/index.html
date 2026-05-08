@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Serverless Cloud Management Console</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="dashboard-wrapper">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                <i class="fas fa-cubes fa-2x"></i>
+                <span>AWS-SIMULATOR</span>
+            </div>
+            <nav class="nav-menu">
+                <li class="nav-item">
+                    <a href="#" class="nav-link active"><i class="fas fa-th-large"></i> Dashboard</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link"><i class="fas fa-microchip"></i> Lambda Functions</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link"><i class="fas fa-hdd"></i> S3 Storage</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link"><i class="fas fa-network-wired"></i> API Gateway</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link"><i class="fas fa-database"></i> DynamoDB</a>
+                </li>
+                <li class="nav-item" style="margin-top: 2rem;">
+                    <a href="#" class="nav-link"><i class="fas fa-cog"></i> Settings</a>
+                </li>
+                <li class="nav-item">
+                    <a href="/logout" class="nav-link" style="color: var(--danger);"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                </li>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="header-bar">
+                <div class="header-title">
+                    <h2>Serverless Infrastructure Overview</h2>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">Region: <strong>local-dev-1</strong> | VPC: <strong>vpc-0a1b2c3d</strong></p>
+                </div>
+                <div class="header-actions">
+                    <form action="/api/v1/storage/upload" method="POST" enctype="multipart/form-data" id="uploadForm">
+                        <input type="file" name="file" id="fileInput" style="display: none;" onchange="document.getElementById('uploadForm').submit();">
+                        <a href="javascript:void(0)" class="modal-trigger" onclick="document.getElementById('fileInput').click();">
+                            <i class="fas fa-cloud-upload-alt"></i> Upload to S3
+                        </a>
+                    </form>
+                    <a href="#" class="btn-primary" style="width: auto; padding: 0.6rem 1.2rem; background: var(--bg-tertiary); border: 1px solid var(--border);">
+                        <i class="fas fa-sync"></i> Refresh Console
+                    </a>
+                </div>
+            </header>
+
+            <!-- Stat Cards -->
+            <div class="stat-grid">
+                <div class="stat-card stagger-1">
+                    <div class="stat-card-header">
+                        <span>Total Requests (24h)</span>
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="stat-value">{{ analytics.requests }}</div>
+                    <div class="stat-delta delta-up"><i class="fas fa-caret-up"></i> 12.5% vs last period</div>
+                </div>
+                <div class="stat-card stagger-2">
+                    <div class="stat-card-header">
+                        <span>Data Transferred</span>
+                        <i class="fas fa-exchange-alt"></i>
+                    </div>
+                    <div class="stat-value">{{ analytics.data_transfer }}</div>
+                    <div class="stat-delta delta-up"><i class="fas fa-caret-up"></i> 4.2% Growth</div>
+                </div>
+                <div class="stat-card stagger-3">
+                    <div class="stat-card-header">
+                        <span>Global Latency</span>
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    <div class="stat-value">{{ analytics.latency }}</div>
+                    <div class="stat-delta delta-down"><i class="fas fa-caret-down"></i> 2ms optimization</div>
+                </div>
+                <div class="stat-card stagger-1">
+                    <div class="stat-card-header">
+                        <span>System Health</span>
+                        <i class="fas fa-heartbeat"></i>
+                    </div>
+                    <div class="stat-value" style="color: var(--success);">{{ health.status }}</div>
+                    <div class="stat-delta">Uptime: {{ health.uptime }}</div>
+                </div>
+            </div>
+
+            <div class="content-grid">
+                <!-- Left Column -->
+                <div class="left-col">
+                    <!-- Lambda Functions -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-microchip"></i> Active Lambda Functions</h3>
+                            <span style="font-size: 0.8rem; color: var(--accent-blue);">3 Functions Running</span>
+                        </div>
+                        <div class="card-body">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Function Name</th>
+                                        <th>Runtime</th>
+                                        <th>Status</th>
+                                        <th>Last Invocation</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for fn in lambdas %}
+                                    <tr>
+                                        <td style="font-weight: 600;">{{ fn.name }}</td>
+                                        <td style="color: var(--text-secondary);">{{ fn.runtime }}</td>
+                                        <td><span class="badge badge-{{ fn.status.lower() }}">{{ fn.status }}</span></td>
+                                        <td>{{ fn.last_invoked }}</td>
+                                        <td>
+                                            <button onclick="invokeLambda('{{ fn.name }}')" style="background: none; border: 1px solid var(--border); color: var(--text-primary); cursor: pointer; padding: 4px 8px; border-radius: 4px;">
+                                                Invoke
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- S3 Objects -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-database"></i> S3 Bucket: prod-deployment-assets</h3>
+                            <span style="font-size: 0.8rem; color: var(--text-secondary);">Standard Storage</span>
+                        </div>
+                        <div class="card-body">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Object Key</th>
+                                        <th>Size</th>
+                                        <th>Type</th>
+                                        <th>Last Modified</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for obj in storage %}
+                                    <tr>
+                                        <td><i class="far fa-file" style="margin-right: 8px;"></i> {{ obj.name }}</td>
+                                        <td>{{ obj.size }}</td>
+                                        <td>{{ obj.type }}</td>
+                                        <td style="font-size: 0.8rem;">{{ obj.last_modified }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- DynamoDB Records -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-table"></i> DynamoDB Table: GlobalStore</h3>
+                            <span style="font-size: 0.8rem; color: var(--text-secondary);">Provisioned Capacity: 5 RCU / 5 WCU</span>
+                        </div>
+                        <div class="card-body">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Partition Key (PK)</th>
+                                        <th>Sort Key (SK)</th>
+                                        <th>Attributes (JSON)</th>
+                                        <th>TTL</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for rec in dynamodb %}
+                                    <tr>
+                                        <td style="font-family: monospace; color: var(--accent-blue);">{{ rec.PK }}</td>
+                                        <td style="font-family: monospace;">{{ rec.SK }}</td>
+                                        <td style="font-size: 0.8rem; color: var(--text-secondary);">{{ rec.Data }}</td>
+                                        <td>{{ rec.TTL }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column -->
+                <div class="right-col">
+                    <!-- API Gateway Logs -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-stream"></i> API Gateway Logs</h3>
+                        </div>
+                        <div class="card-body" id="log-container">
+                            {% for log in logs %}
+                            <div class="log-item">
+                                <div class="log-method method-{{ log.method.lower() }}">{{ log.method }}</div>
+                                <div class="log-details">
+                                    <div class="log-path">{{ log.path }}</div>
+                                    <div class="log-meta">
+                                        Status: <span style="color: var(--success);">{{ log.status }}</span> | Latency: {{ log.latency }} | {{ log.timestamp }}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Real-time Chart -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-chart-area"></i> Live Infrastructure Load</h3>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="metricsChart" height="200"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Real-time Metrics Chart
+        const ctx = document.getElementById('metricsChart').getContext('2d');
+        const metricsChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['', '', '', '', '', '', '', '', '', ''],
+                datasets: [{
+                    label: 'CPU Usage %',
+                    data: [12, 19, 15, 17, 14, 25, 20, 22, 18, 24],
+                    borderColor: '#00a1ff',
+                    backgroundColor: 'rgba(0, 161, 255, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, grid: { color: '#2d3748' }, ticks: { color: '#94a3b8' } },
+                    x: { grid: { display: false }, ticks: { display: false } }
+                }
+            }
+        });
+
+        // Update metrics every 3 seconds
+        setInterval(() => {
+            fetch('/api/v1/metrics')
+                .then(res => res.json())
+                .then(data => {
+                    metricsChart.data.datasets[0].data.shift();
+                    metricsChart.data.datasets[0].data.push(data.cpu);
+                    metricsChart.update();
+                });
+        }, 3000);
+
+        function invokeLambda(name) {
+            fetch(`/api/v1/lambda/invoke/${name}`, { method: 'POST' })
+                .then(res => res.json())
+                .then(data => {
+                    alert(`Lambda ${name} invoked successfully!\nExecution ID: ${data.execution_id}`);
+                    location.reload();
+                });
+        }
+    </script>
+</body>
+</html>

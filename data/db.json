@@ -1,0 +1,26 @@
+{
+    "users": [
+        {
+            "username": "admin",
+            "password": "scrypt:32768:8:1$Rmh3MimSWdEJY7Pc$14051a52ef2f70b1f47e134e43cc48a4452a527a1543517a01cc22f993ba3ae86e217168ffbf25e2a0ce9c3c88b5504ca85ea9ba9dbc807188e4a4b311b0c186"
+        }
+    ],
+    "storage": [],
+    "lambda_functions": [
+        {
+            "name": "AuthFunction",
+            "runtime": "Python 3.11",
+            "status": "Active",
+            "last_invoked": "1m ago",
+            "memory": "128MB"
+        },
+        {
+            "name": "DataProcessor",
+            "runtime": "Python 3.11",
+            "status": "Active",
+            "last_invoked": "5m ago",
+            "memory": "256MB"
+        }
+    ],
+    "api_logs": []
+}
